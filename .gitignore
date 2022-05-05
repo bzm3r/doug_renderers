@@ -1,0 +1,12 @@
+/target
+*.proto
+*.gds
+*.bin
+.cargo/*
+config.toml
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target
