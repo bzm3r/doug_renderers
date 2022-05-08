@@ -5,10 +5,15 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dependencies]
+bytemuck = "1.9.1"
+
 [dependencies.bevy]
 version = "0.7.0"
 default-features = false
 features = ["bevy_winit", "render"]
 
 [target.'cfg(unix)'.dependencies.bevy]
-features = ["x11", "dynamic"]
+version = "0.7.0"
+default-features = false
+features = ["bevy_winit", "render", "x11", "dynamic"]
