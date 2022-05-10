@@ -10,7 +10,7 @@ use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     window::WindowDescriptor,
 };
-use vpull::VertexPullPlugin;
+use vpull::VpullPlugin;
 
 fn main() {
     App::new()
@@ -23,7 +23,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(VertexPullPlugin)
+        .add_plugin(VpullPlugin)
         .add_startup_system(setup)
         .add_system(camera_controller)
         .run();

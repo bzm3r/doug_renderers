@@ -21,10 +21,10 @@ use crate::phase_item::QuadsPhaseItem;
 use crate::{BatchedQuads, DRect};
 
 use self::pipeline::{VpullPipeline, QUADS_SHADER_HANDLE};
-use self::render_command::{DrawQuadsVertexPulling, DrawVertexPulledQuads};
+use self::render_command::DrawQuadsVertexPulling;
 use self::render_graph::{VpullPassNode, VPULL_PASS};
 
-struct VpullPlugin;
+pub struct VpullPlugin;
 
 impl Plugin for VpullPlugin {
     fn build(&self, app: &mut App) {
@@ -83,7 +83,6 @@ struct ExtractedQuads {
 // Entities and components of the render app are cleared every tick, so we must reset them every tick.
 fn extract_quads_phase(mut commands: Commands, active_3d: Res<ActiveCamera<Camera3d>>) {
     if let Some(entity) = active_3d.get() {
-        println!("got an active 3d camera!");
         commands
             .get_or_spawn(entity)
             .insert(RenderPhase::<QuadsPhaseItem>::default());
@@ -176,7 +175,7 @@ fn queue_quads(
 ) {
     let draw_quads = opaque_3d_draw_functions
         .read()
-        .get_id::<DrawVertexPulledQuads>()
+        .get_id::<DrawQuadsVertexPulling>()
         .unwrap();
 
     for mut opaque_phase in views.iter_mut() {
@@ -187,10 +186,4 @@ fn queue_quads(
             });
         }
     }
-}
-
-pub struct VertexPullPlugin;
-
-impl Plugin for VertexPullPlugin {
-    fn build(&self, _app: &mut App) {}
 }
