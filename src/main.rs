@@ -11,7 +11,7 @@ use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     window::WindowDescriptor,
 };
-use vpull::VertexPullRendererPlugin;
+use vpull::VertexPullPlugin;
 
 fn main() {
     App::new()
@@ -24,38 +24,29 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(VertexPullRendererPlugin)
+        .add_plugin(VertexPullPlugin)
         .add_startup_system(setup)
         .add_system(camera_controller)
         .run();
 }
 
 // Ultimately, Doug converts ints into f32s
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
 }
 
 // Rect in the format Doug uses
-#[derive(Clone, Copy, Default, Component)]
-pub struct Rect {
+#[derive(Clone, Copy, Default, Component, Debug)]
+pub struct DRect {
     pub p0: Point,
     pub p1: Point,
 }
 
-impl Rect {
-    fn rect_producer() -> Vec<Rect> {
-        vec![Rect {
-            p0: Point { x: -1.0, y: -1.0 },
-            p1: Point { x: 1.0, y: 1.0 },
-        }]
-    }
-}
-
-#[derive(Clone, Component, Default)]
+#[derive(Clone, Component, Default, Debug)]
 pub struct BatchedQuads {
-    pub data: Vec<Rect>,
+    pub data: Vec<DRect>,
     pub extracted: bool,
     pub prepared: bool,
 }
@@ -69,10 +60,10 @@ fn setup(mut commands: Commands) {
         .insert(CameraController::default());
 
     let mut batched_rects = BatchedQuads::default();
-    for rect in Rect::rect_producer().into_iter() {
-        commands.spawn_bundle((rect.clone(),));
-        batched_rects.data.push(rect);
-    }
+    batched_rects.data.push(DRect {
+        p0: Point { x: -1.0, y: -1.0 },
+        p1: Point { x: 1.0, y: 1.0 },
+    });
     commands.spawn_bundle((batched_rects,));
 }
 

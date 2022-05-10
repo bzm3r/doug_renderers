@@ -2,7 +2,7 @@ use bevy::core::{Pod, Zeroable};
 use bevy::prelude::*;
 use bevy::render::render_resource::{BindGroup, Buffer, BufferUsages, BufferVec};
 
-use crate::Rect;
+use crate::DRect;
 
 // Data structure that will be sent to the GPU
 #[derive(Clone, Copy, Debug, Default, Pod, Zeroable)]
@@ -12,8 +12,8 @@ pub struct GpuQuad {
     p1: Vec2,
 }
 
-impl From<&Rect> for GpuQuad {
-    fn from(rect: &Rect) -> Self {
+impl From<&DRect> for GpuQuad {
+    fn from(rect: &DRect) -> Self {
         Self {
             p0: Vec2::new(rect.p0.x, rect.p0.y),
             p1: Vec2::new(rect.p1.x, rect.p1.y),
