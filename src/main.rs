@@ -1,4 +1,3 @@
-mod compute;
 mod gpu_quads;
 mod phase_item;
 mod state;
