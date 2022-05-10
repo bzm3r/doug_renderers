@@ -38,7 +38,7 @@ impl Default for GpuQuads {
     }
 }
 
-#[derive(Component)]
+#[derive(Default)]
 pub struct GpuQuadsBindGroup {
-    pub bind_group: BindGroup,
+    pub bind_group: Option<BindGroup>,
 }

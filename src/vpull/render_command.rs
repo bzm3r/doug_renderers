@@ -49,17 +49,21 @@ impl<P: PhaseItem> RenderCommand<P> for SetQuadsPipeline {
 
 pub struct SetGpuQuadsBindGroup<const I: usize>;
 impl<const I: usize> EntityRenderCommand for SetGpuQuadsBindGroup<I> {
-    type Param = SQuery<Read<GpuQuadsBindGroup>>;
+    type Param = SRes<GpuQuadsBindGroup>;
 
     #[inline]
     fn render<'w>(
         _view: Entity,
         item: Entity,
-        gpu_quads_bind_groups: SystemParamItem<'w, '_, Self::Param>,
+        gpu_quads_bind_group: SystemParamItem<'w, '_, Self::Param>,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let gpu_quads_bind_group = gpu_quads_bind_groups.get_inner(item).unwrap();
-        pass.set_bind_group(I, &gpu_quads_bind_group.bind_group, &[]);
+        let bind_group = gpu_quads_bind_group
+            .into_inner()
+            .bind_group
+            .as_ref()
+            .expect("bind group must have been set before this point!");
+        pass.set_bind_group(I, bind_group, &[]);
 
         RenderCommandResult::Success
     }

@@ -40,6 +40,7 @@ impl Plugin for VpullPlugin {
             .add_render_command::<QuadsPhaseItem, DrawQuadsVertexPulling>()
             .init_resource::<VpullPipeline>()
             .init_resource::<GpuQuads>()
+            .init_resource::<ExtractedQuads>()
             .add_system_to_stage(RenderStage::Extract, extract_quads_phase)
             .add_system_to_stage(RenderStage::Extract, extract_quads)
             .add_system_to_stage(RenderStage::Prepare, prepare_quads)
@@ -92,21 +93,15 @@ fn extract_quads_phase(mut commands: Commands, active_3d: Res<ActiveCamera<Camer
 // The commands in this function are from the Render sub app, but the queries access
 // entities from the main app.
 fn extract_quads(
-    mut commands: Commands,
-    mut batched_quads_query: Query<(Entity, &mut BatchedQuads)>,
+    mut extracted_quads: ResMut<ExtractedQuads>,
+    mut batched_quads_query: Query<&mut BatchedQuads>,
 ) {
-    for (entity, mut batched_quads) in batched_quads_query.iter_mut() {
+    for mut batched_quads in batched_quads_query.iter_mut() {
         if !batched_quads.extracted {
-            commands.get_or_spawn(entity).insert(ExtractedQuads {
-                data: batched_quads.data.clone(),
-                prepared: false,
-            });
+            extracted_quads.data = batched_quads.data.clone();
             batched_quads.extracted = true;
         } else {
-            commands.get_or_spawn(entity).insert(ExtractedQuads {
-                data: Vec::new(),
-                prepared: false,
-            });
+            extracted_quads.data = Vec::new();
         }
     }
 }
@@ -118,51 +113,47 @@ fn extract_quads(
 // This time, the resources will come from the render app world.
 fn prepare_quads(
     mut commands: Commands,
-    quads: Query<(Entity, &ExtractedQuads)>,
+    extracted_quads: Res<ExtractedQuads>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
     mut gpu_quads: ResMut<GpuQuads>,
+    mut gpu_quads_bind_group: ResMut<GpuQuadsBindGroup>,
     quads_pipeline: Res<VpullPipeline>,
 ) {
-    for (entity, quads) in quads.iter() {
-        if !quads.prepared {
-            for quad in quads.data.iter() {
-                gpu_quads.instances.push(GpuQuad::from(quad));
-            }
-            gpu_quads.index_count = gpu_quads.instances.len() as u32 * 6;
-            let mut indices = Vec::with_capacity(gpu_quads.index_count as usize);
-            for i in 0..gpu_quads.instances.len() {
-                let base = (i * 6) as u32;
-                indices.push(base + 2);
-                indices.push(base);
-                indices.push(base + 1);
-                indices.push(base + 1);
-                indices.push(base + 3);
-                indices.push(base + 2);
-            }
-            gpu_quads.index_buffer = Some(render_device.create_buffer_with_data(
-                &BufferInitDescriptor {
-                    label: Some("gpu_quads_index_buffer"),
-                    contents: cast_slice(&indices),
-                    usage: BufferUsages::INDEX,
-                },
-            ));
-            gpu_quads
-                .instances
-                .write_buffer(&*render_device, &*render_queue);
-            commands
-                .get_or_spawn(entity)
-                .insert_bundle((GpuQuadsBindGroup {
-                    bind_group: render_device.create_bind_group(&BindGroupDescriptor {
-                        label: Some("gpu_quads_bind_group"),
-                        layout: &quads_pipeline.quads_layout,
-                        entries: &[BindGroupEntry {
-                            binding: 0,
-                            resource: gpu_quads.instances.buffer().unwrap().as_entire_binding(),
-                        }],
-                    }),
-                },));
+    if !extracted_quads.prepared {
+        for quad in extracted_quads.data.iter() {
+            gpu_quads.instances.push(GpuQuad::from(quad));
         }
+        gpu_quads.index_count = gpu_quads.instances.len() as u32 * 6;
+        let mut indices = Vec::with_capacity(gpu_quads.index_count as usize);
+        for i in 0..gpu_quads.instances.len() {
+            let base = (i * 6) as u32;
+            indices.push(base + 2);
+            indices.push(base);
+            indices.push(base + 1);
+            indices.push(base + 1);
+            indices.push(base + 3);
+            indices.push(base + 2);
+        }
+        gpu_quads.index_buffer = Some(render_device.create_buffer_with_data(
+            &BufferInitDescriptor {
+                label: Some("gpu_quads_index_buffer"),
+                contents: cast_slice(&indices),
+                usage: BufferUsages::INDEX,
+            },
+        ));
+        gpu_quads
+            .instances
+            .write_buffer(&*render_device, &*render_queue);
+        gpu_quads_bind_group.bind_group =
+            Some(render_device.create_bind_group(&BindGroupDescriptor {
+                label: Some("gpu_quads_bind_group"),
+                layout: &quads_pipeline.quads_layout,
+                entries: &[BindGroupEntry {
+                    binding: 0,
+                    resource: gpu_quads.instances.buffer().unwrap().as_entire_binding(),
+                }],
+            }));
     }
 }
 
