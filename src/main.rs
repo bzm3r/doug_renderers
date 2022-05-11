@@ -41,6 +41,13 @@ pub struct Point {
 pub struct DRect {
     pub p0: Point,
     pub p1: Point,
+    pub z: f32,
+}
+
+pub struct LayerRects {
+    pub rects: Vec<DRect>,
+    //pub color: Color,
+    pub index: u8,
 }
 
 #[derive(Clone, Component, Default, Debug)]
@@ -59,10 +66,34 @@ fn setup(mut commands: Commands) {
         .insert(CameraController::default());
 
     let mut batched_rects = BatchedQuads::default();
-    batched_rects.data.push(DRect {
-        p0: Point { x: -1.0, y: -1.0 },
-        p1: Point { x: 1.0, y: 1.0 },
-    });
+
+    batched_rects.data.extend(vec![
+        DRect {
+            p0: Point { x: 0.0, y: 0.0 },
+            p1: Point { x: 1.0, y: 1.0 },
+            z: 1.0,
+        },
+        DRect {
+            p0: Point { x: 0.5, y: 0.5 },
+            p1: Point { x: 1.5, y: 1.5 },
+            z: 1.0,
+        },
+        DRect {
+            p0: Point { x: 1.0, y: 1.0 },
+            p1: Point { x: 2.0, y: 2.0 },
+            z: 1.0,
+        },
+        DRect {
+            p0: Point { x: 1.5, y: 1.5 },
+            p1: Point { x: 2.5, y: 2.5 },
+            z: 1.0,
+        },
+        DRect {
+            p0: Point { x: 2.0, y: 2.0 },
+            p1: Point { x: 3.0, y: 3.0 },
+            z: 1.0,
+        },
+    ]);
     commands.spawn_bundle((batched_rects,));
 }
 

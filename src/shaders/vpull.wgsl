@@ -14,6 +14,7 @@ struct View {
 struct Quad {
     p0: vec2<f32>;
     p1: vec2<f32>;
+    p2: vec2<f32>;
 };
 
 struct Quads {
@@ -43,9 +44,10 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
 
     let xyz = vec3<i32>(i32(vertex_index & 0x1u), i32((vertex_index & 0x2u) >> 1u), 0);
     out.uv = vec2<f32>(xyz.xy);
-    let relative_pos = vec2<f32>(out.uv * quad.p1);
+    let wh = quad.p1 - quad.p0;
+    let relative_pos = vec2<f32>(out.uv * wh);
 
-    out.world_position = vec4<f32>(quad.p0 + relative_pos, 0.0, 1.0);
+    out.world_position = vec4<f32>(quad.p0 + relative_pos, quad.p2.x, 1.0);
     out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
     out.clip_position = view.view_proj * out.world_position;

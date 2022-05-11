@@ -10,6 +10,7 @@ use crate::DRect;
 pub struct GpuQuad {
     p0: Vec2,
     p1: Vec2,
+    z: Vec2,
 }
 
 impl From<&DRect> for GpuQuad {
@@ -17,6 +18,7 @@ impl From<&DRect> for GpuQuad {
         Self {
             p0: Vec2::new(rect.p0.x, rect.p0.y),
             p1: Vec2::new(rect.p1.x, rect.p1.y),
+            z: Vec2::new(rect.z, 0.0),
         }
     }
 }

@@ -97,10 +97,14 @@ fn extract_quads(
 ) {
     for (entity, mut batched_quads) in batched_quads_query.iter_mut() {
         if !batched_quads.extracted {
-            commands.get_or_spawn(entity).insert(ExtractedQuads {
+            let extracted_quads = ExtractedQuads {
                 data: batched_quads.data.clone(),
                 prepared: false,
-            });
+            };
+            commands
+                .get_or_spawn(entity)
+                .insert(extracted_quads.clone());
+            println!("{extracted_quads:?}");
             batched_quads.extracted = true;
         } else {
             commands.get_or_spawn(entity).insert(ExtractedQuads {
@@ -129,7 +133,9 @@ fn prepare_quads(
             for quad in quads.data.iter() {
                 gpu_quads.instances.push(GpuQuad::from(quad));
             }
+            println!("count of rects: {}", gpu_quads.instances.len());
             gpu_quads.index_count = gpu_quads.instances.len() as u32 * 6;
+            println!("index count: {}", gpu_quads.index_count);
             let mut indices = Vec::with_capacity(gpu_quads.index_count as usize);
             for i in 0..gpu_quads.instances.len() {
                 let base = (i * 6) as u32;
