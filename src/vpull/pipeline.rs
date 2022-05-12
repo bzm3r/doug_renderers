@@ -19,7 +19,7 @@ use bevy::{
 
 pub struct VpullPipeline {
     pub pipeline_id: CachedRenderPipelineId,
-    pub quads_layout: BindGroupLayout,
+    pub data_layout: BindGroupLayout,
 }
 
 pub const QUADS_SHADER_HANDLE: HandleUntyped =
@@ -49,27 +49,39 @@ impl FromWorld for VpullPipeline {
                     label: Some("shadow_view_layout"),
                 });
 
-        let quads_layout =
+        let data_layout =
             world
                 .resource::<RenderDevice>()
                 .create_bind_group_layout(&BindGroupLayoutDescriptor {
                     label: None,
-                    entries: &[BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: ShaderStages::VERTEX,
-                        ty: BindingType::Buffer {
-                            ty: BufferBindingType::Storage { read_only: true },
-                            has_dynamic_offset: false,
-                            min_binding_size: BufferSize::new(0),
+                    entries: &[
+                        BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: ShaderStages::VERTEX,
+                            ty: BindingType::Buffer {
+                                ty: BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: BufferSize::new(0),
+                            },
+                            count: None,
                         },
-                        count: None,
-                    }],
+                        // BindGroupLayoutEntry {
+                        //     binding: 1,
+                        //     visibility: ShaderStages::VERTEX,
+                        //     ty: BindingType::Buffer {
+                        //         ty: BufferBindingType::Storage { read_only: true },
+                        //         has_dynamic_offset: false,
+                        //         min_binding_size: BufferSize::new(0),
+                        //     },
+                        //     count: None,
+                        // },
+                    ],
                 });
 
         let mut pipeline_cache = world.resource_mut::<PipelineCache>();
         let pipeline_id = pipeline_cache.queue_render_pipeline(RenderPipelineDescriptor {
             label: Some("vpull_pipeline".into()),
-            layout: Some(vec![view_layout, quads_layout.clone()]),
+            layout: Some(vec![view_layout, data_layout.clone()]),
             vertex: VertexState {
                 shader: QUADS_SHADER_HANDLE.typed(),
                 shader_defs: vec![],
@@ -120,7 +132,7 @@ impl FromWorld for VpullPipeline {
 
         Self {
             pipeline_id,
-            quads_layout,
+            data_layout,
         }
     }
 }

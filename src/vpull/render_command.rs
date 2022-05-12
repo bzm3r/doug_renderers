@@ -13,7 +13,7 @@ use bevy::{
     },
 };
 
-use crate::gpu_quads::{GpuQuads, GpuQuadsBindGroup};
+use crate::gpu_data::{GpuDataBindGroup, GpuQuads};
 
 use super::pipeline::VpullPipeline;
 
@@ -49,7 +49,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetQuadsPipeline {
 
 pub struct SetGpuQuadsBindGroup<const I: usize>;
 impl<const I: usize> EntityRenderCommand for SetGpuQuadsBindGroup<I> {
-    type Param = SQuery<Read<GpuQuadsBindGroup>>;
+    type Param = SQuery<Read<GpuDataBindGroup>>;
 
     #[inline]
     fn render<'w>(

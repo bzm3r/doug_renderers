@@ -16,7 +16,7 @@ use bevy::app::{App, Plugin};
 use bevy::render::{RenderApp, RenderStage};
 use bytemuck::cast_slice;
 
-use crate::gpu_quads::{GpuQuad, GpuQuads, GpuQuadsBindGroup};
+use crate::gpu_data::{GpuDataBindGroup, GpuPalette, GpuQuad, GpuQuads};
 use crate::phase_item::QuadsPhaseItem;
 use crate::{BatchedQuads, DRect};
 
@@ -28,6 +28,7 @@ pub struct VpullPlugin;
 
 impl Plugin for VpullPlugin {
     fn build(&self, app: &mut App) {
+        println!("building vertex pull plugin!");
         app.world.resource_mut::<Assets<Shader>>().set_untracked(
             QUADS_SHADER_HANDLE,
             Shader::from_wgsl(include_str!("../shaders/vpull.wgsl")),
@@ -40,6 +41,8 @@ impl Plugin for VpullPlugin {
             .add_render_command::<QuadsPhaseItem, DrawQuadsVertexPulling>()
             .init_resource::<VpullPipeline>()
             .init_resource::<GpuQuads>()
+            // .init_resource::<Palette>()
+            // .init_resource::<GpuPalette>()
             .add_system_to_stage(RenderStage::Extract, extract_quads_phase)
             .add_system_to_stage(RenderStage::Extract, extract_quads)
             .add_system_to_stage(RenderStage::Prepare, prepare_quads)
@@ -71,6 +74,23 @@ struct ExtractedQuads {
     prepared: bool,
 }
 
+struct Palette {
+    colors: Vec<Color>,
+    prepared: bool,
+}
+
+impl Default for Palette {
+    fn default() -> Self {
+        Palette {
+            colors: vec!["648FFF", "785EF0", "DC267F", "FE6100", "FFB000"]
+                .into_iter()
+                .map(|c| Color::hex(c).unwrap())
+                .collect::<Vec<Color>>(),
+            ..default()
+        }
+    }
+}
+
 // EXTRACT:
 // This is the one synchronization point between the Main World and the Render World.
 // Relevant Entities, Components, and Resources are read from the Main World and written
@@ -95,6 +115,7 @@ fn extract_quads(
     mut commands: Commands,
     mut batched_quads_query: Query<(Entity, &mut BatchedQuads)>,
 ) {
+    //println!("extracting quads!");
     for (entity, mut batched_quads) in batched_quads_query.iter_mut() {
         if !batched_quads.extracted {
             let extracted_quads = ExtractedQuads {
@@ -126,6 +147,8 @@ fn prepare_quads(
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
     mut gpu_quads: ResMut<GpuQuads>,
+    // mut palette: ResMut<Palette>,
+    // mut gpu_palette: ResMut<GpuPalette>,
     quads_pipeline: Res<VpullPipeline>,
 ) {
     for (entity, mut quads) in quads.iter_mut() {
@@ -159,16 +182,31 @@ fn prepare_quads(
                 .write_buffer(&*render_device, &*render_queue);
             println!("finished preparing quads.");
         }
+        // if !palette.prepared {
+        //     for color in palette.colors.iter() {
+        //         gpu_palette.data.push(color.as_rgba_f32());
+        //     }
+        //     gpu_palette
+        //         .data
+        //         .write_buffer(&*render_device, &*render_queue);
+        //     palette.prepared = true;
+        // }
         commands
             .get_or_spawn(entity)
-            .insert_bundle((GpuQuadsBindGroup {
+            .insert_bundle((GpuDataBindGroup {
                 bind_group: render_device.create_bind_group(&BindGroupDescriptor {
-                    label: Some("gpu_quads_bind_group"),
-                    layout: &quads_pipeline.quads_layout,
-                    entries: &[BindGroupEntry {
-                        binding: 0,
-                        resource: gpu_quads.instances.buffer().unwrap().as_entire_binding(),
-                    }],
+                    label: Some("gpu_data_bind_group"),
+                    layout: &quads_pipeline.data_layout,
+                    entries: &[
+                        BindGroupEntry {
+                            binding: 0,
+                            resource: gpu_quads.instances.buffer().unwrap().as_entire_binding(),
+                        },
+                        // BindGroupEntry {
+                        //     binding: 1,
+                        //     resource: gpu_palette.data.buffer().unwrap().as_entire_binding(),
+                        // },
+                    ],
                 }),
             },));
     }

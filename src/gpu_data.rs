@@ -8,15 +8,19 @@ use crate::DRect;
 #[derive(Clone, Copy, Debug, Default, Pod, Zeroable)]
 #[repr(C)]
 pub struct GpuQuad {
-    p0: Vec4,
-    p1: Vec4,
+    pub p0: Vec2,
+    pub p1: Vec2,
+    pub layer: f32,
+    pub color: u32,
 }
 
 impl From<&DRect> for GpuQuad {
     fn from(rect: &DRect) -> Self {
         Self {
-            p0: Vec4::new(rect.p0.x, rect.p0.y, 0.0, 0.0),
-            p1: Vec4::new(rect.p1.x, rect.p1.y, rect.z, 0.0),
+            p0: Vec2::new(rect.p0.x, rect.p0.y),
+            p1: Vec2::new(rect.p1.x, rect.p1.y),
+            layer: rect.layer,
+            color: rect.color,
         }
     }
 }
@@ -39,6 +43,19 @@ impl Default for GpuQuads {
 }
 
 #[derive(Component)]
-pub struct GpuQuadsBindGroup {
+pub struct GpuDataBindGroup {
     pub bind_group: BindGroup,
+}
+
+#[derive(Component)]
+pub struct GpuPalette {
+    pub data: BufferVec<[f32; 4]>,
+}
+
+impl Default for GpuPalette {
+    fn default() -> Self {
+        Self {
+            data: BufferVec::<[f32; 4]>::new(BufferUsages::STORAGE),
+        }
+    }
 }

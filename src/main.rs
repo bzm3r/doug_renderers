@@ -1,15 +1,11 @@
-mod gpu_quads;
+mod gpu_data;
 mod phase_item;
 mod state;
 mod vpull;
 
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
-use bevy::{
-    app::App,
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    window::WindowDescriptor,
-};
+use bevy::{app::App, diagnostic::LogDiagnosticsPlugin, window::WindowDescriptor};
 use vpull::VpullPlugin;
 
 fn main() {
@@ -21,7 +17,7 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
-        .add_plugin(FrameTimeDiagnosticsPlugin)
+        // .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(VpullPlugin)
         .add_startup_system(setup)
@@ -41,7 +37,8 @@ pub struct Point {
 pub struct DRect {
     pub p0: Point,
     pub p1: Point,
-    pub z: f32,
+    pub layer: f32,
+    pub color: u32,
 }
 
 pub struct LayerRects {
@@ -67,28 +64,29 @@ fn setup(mut commands: Commands) {
 
     let mut batched_rects = BatchedQuads::default();
 
-    // let scale = 1.0 / 10.0;
-    // let rects: Vec<DRect> = (0..9)
-    //     .map(|ix| {
-    //         let ix = ix as f32;
-    //         DRect {
-    //             p0: Point {
-    //                 x: ix * scale,
-    //                 y: ix * scale,
-    //             },
-    //             p1: Point {
-    //                 x: (1.25 * ix + 1.0) * scale,
-    //                 y: (1.25 * ix + 1.0) * scale,
-    //             },
-    //             z: ix * scale,
-    //         }
-    //     })
-    //     .collect();
-    let rects: Vec<DRect> = vec![DRect {
-        p0: Point { x: -10.0, y: -10.0 },
-        p1: Point { x: 10.0, y: 10.0 },
-        z: 0.0,
-    }];
+    let scale = 10.0 / 10.0;
+    let rects: Vec<DRect> = (0..9)
+        .map(|ix| {
+            let ix = ix as f32;
+            DRect {
+                p0: Point {
+                    x: ix * scale,
+                    y: ix * scale,
+                },
+                p1: Point {
+                    x: 2.0 * ((1.25 * ix + 1.0) * scale),
+                    y: (1.25 * ix + 1.0) * scale,
+                },
+                layer: ix,
+                color: (ix as u32) % 2,
+            }
+        })
+        .collect();
+    // let rects: Vec<DRect> = vec![DRect {
+    //     p0: Point { x: -10.0, y: -10.0 },
+    //     p1: Point { x: 10.0, y: 10.0 },
+    //     z: 0.0,
+    // }];
     batched_rects.data = rects;
     commands.spawn_bundle((batched_rects,));
 }

@@ -12,8 +12,10 @@ struct View {
 };
 
 struct Quad {
-    p0: vec4<f32>;
-    p1: vec4<f32>;
+    p0: vec2<f32>;
+    p1: vec2<f32>;
+    layer: f32;
+    color: u32;
 };
 
 struct Quads {
@@ -25,6 +27,9 @@ var<uniform> view: View;
 
 [[group(1), binding(0)]]
 var<storage> quads: Quads;
+
+// [[group(1), binding(1)]]
+// var<storage> palette: array<vec4<f32>>;
 
 struct VertexOutput {
     [[builtin(position)]] clip_position: vec4<f32>;
@@ -47,11 +52,13 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     let wh = quad.p1.xy - quad.p0.xy;
     let relative_pos = vec2<f32>(out.uv * wh);
 
-    out.world_position = vec4<f32>(quad.p0.xy + relative_pos, quad.p1.z, 1.0);
+    out.world_position = vec4<f32>(quad.p0.xy + relative_pos, 0.0, 1.0);
+    //out.world_position = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
     out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
     out.clip_position = view.view_proj * out.world_position;
     out.color = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    // palette[quad.color];
     return out;
 }
 
