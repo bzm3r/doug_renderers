@@ -42,7 +42,7 @@ impl Plugin for VpullPlugin {
             .init_resource::<VpullPipeline>()
             .init_resource::<GpuQuads>()
             // .init_resource::<Palette>()
-            // .init_resource::<GpuPalette>()
+            .init_resource::<GpuPalette>()
             .add_system_to_stage(RenderStage::Extract, extract_quads_phase)
             .add_system_to_stage(RenderStage::Extract, extract_quads)
             .add_system_to_stage(RenderStage::Prepare, prepare_quads)
@@ -148,7 +148,7 @@ fn prepare_quads(
     render_queue: Res<RenderQueue>,
     mut gpu_quads: ResMut<GpuQuads>,
     // mut palette: ResMut<Palette>,
-    // mut gpu_palette: ResMut<GpuPalette>,
+    mut gpu_palette: ResMut<GpuPalette>,
     quads_pipeline: Res<VpullPipeline>,
 ) {
     for (entity, mut quads) in quads.iter_mut() {
@@ -180,6 +180,9 @@ fn prepare_quads(
             gpu_quads
                 .instances
                 .write_buffer(&*render_device, &*render_queue);
+            gpu_palette
+                .data
+                .write_buffer(&*render_device, &*render_queue);
             println!("finished preparing quads.");
         }
         // if !palette.prepared {
@@ -202,10 +205,10 @@ fn prepare_quads(
                             binding: 0,
                             resource: gpu_quads.instances.buffer().unwrap().as_entire_binding(),
                         },
-                        // BindGroupEntry {
-                        //     binding: 1,
-                        //     resource: gpu_palette.data.buffer().unwrap().as_entire_binding(),
-                        // },
+                        BindGroupEntry {
+                            binding: 1,
+                            resource: gpu_palette.data.buffer().unwrap().as_entire_binding(),
+                        },
                     ],
                 }),
             },));

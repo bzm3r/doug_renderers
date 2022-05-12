@@ -22,14 +22,18 @@ struct Quads {
     data: array<Quad>;
 };
 
+struct Palette {
+    colors: array<vec4<f32>>;
+};
+
 [[group(0), binding(0)]]
 var<uniform> view: View;
 
 [[group(1), binding(0)]]
 var<storage> quads: Quads;
 
-// [[group(1), binding(1)]]
-// var<storage> palette: array<vec4<f32>>;
+[[group(1), binding(1)]]
+var<storage> palette: Palette;
 
 struct VertexOutput {
     [[builtin(position)]] clip_position: vec4<f32>;
@@ -57,7 +61,8 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
     out.clip_position = view.view_proj * out.world_position;
-    out.color = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    out.color = palette.colors[0];
+    //vec4<f32>(1.0, 1.0, 1.0, 1.0);
     // palette[quad.color];
     return out;
 }
@@ -72,10 +77,12 @@ struct FragmentInput {
 
 [[stage(fragment)]]
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
+    var local_color = in.color;
     if (in.uv.x > 0.9 || in.uv.y > 0.9 || in.uv.x < 0.1 || in.uv.y < 0.1) {
-        return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+        return in.color;
     } else {
-        return vec4<f32>(1.0, 0.0, 0.0, 0.1);
+        let c = vec4<f32>(local_color.xyx, 0.5);
+        return c;
     }
 }
 

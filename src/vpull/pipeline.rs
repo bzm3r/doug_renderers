@@ -65,16 +65,16 @@ impl FromWorld for VpullPipeline {
                             },
                             count: None,
                         },
-                        // BindGroupLayoutEntry {
-                        //     binding: 1,
-                        //     visibility: ShaderStages::VERTEX,
-                        //     ty: BindingType::Buffer {
-                        //         ty: BufferBindingType::Storage { read_only: true },
-                        //         has_dynamic_offset: false,
-                        //         min_binding_size: BufferSize::new(0),
-                        //     },
-                        //     count: None,
-                        // },
+                        BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: ShaderStages::VERTEX,
+                            ty: BindingType::Buffer {
+                                ty: BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: BufferSize::new(0),
+                            },
+                            count: None,
+                        },
                     ],
                 });
 
