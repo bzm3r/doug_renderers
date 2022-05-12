@@ -104,12 +104,12 @@ fn extract_quads(
             commands
                 .get_or_spawn(entity)
                 .insert(extracted_quads.clone());
-            println!("{extracted_quads:?}");
             batched_quads.extracted = true;
+            println!("finished extracting quads.");
         } else {
             commands.get_or_spawn(entity).insert(ExtractedQuads {
                 data: Vec::new(),
-                prepared: false,
+                prepared: true,
             });
         }
     }
@@ -122,14 +122,15 @@ fn extract_quads(
 // This time, the resources will come from the render app world.
 fn prepare_quads(
     mut commands: Commands,
-    quads: Query<(Entity, &ExtractedQuads)>,
+    mut quads: Query<(Entity, &mut ExtractedQuads)>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
     mut gpu_quads: ResMut<GpuQuads>,
     quads_pipeline: Res<VpullPipeline>,
 ) {
-    for (entity, quads) in quads.iter() {
+    for (entity, mut quads) in quads.iter_mut() {
         if !quads.prepared {
+            quads.prepared = true;
             for quad in quads.data.iter() {
                 gpu_quads.instances.push(GpuQuad::from(quad));
             }
@@ -138,7 +139,7 @@ fn prepare_quads(
             println!("index count: {}", gpu_quads.index_count);
             let mut indices = Vec::with_capacity(gpu_quads.index_count as usize);
             for i in 0..gpu_quads.instances.len() {
-                let base = (i * 6) as u32;
+                let base = (i * 4) as u32;
                 indices.push(base + 2);
                 indices.push(base);
                 indices.push(base + 1);
@@ -156,19 +157,20 @@ fn prepare_quads(
             gpu_quads
                 .instances
                 .write_buffer(&*render_device, &*render_queue);
-            commands
-                .get_or_spawn(entity)
-                .insert_bundle((GpuQuadsBindGroup {
-                    bind_group: render_device.create_bind_group(&BindGroupDescriptor {
-                        label: Some("gpu_quads_bind_group"),
-                        layout: &quads_pipeline.quads_layout,
-                        entries: &[BindGroupEntry {
-                            binding: 0,
-                            resource: gpu_quads.instances.buffer().unwrap().as_entire_binding(),
-                        }],
-                    }),
-                },));
+            println!("finished preparing quads.");
         }
+        commands
+            .get_or_spawn(entity)
+            .insert_bundle((GpuQuadsBindGroup {
+                bind_group: render_device.create_bind_group(&BindGroupDescriptor {
+                    label: Some("gpu_quads_bind_group"),
+                    layout: &quads_pipeline.quads_layout,
+                    entries: &[BindGroupEntry {
+                        binding: 0,
+                        resource: gpu_quads.instances.buffer().unwrap().as_entire_binding(),
+                    }],
+                }),
+            },));
     }
 }
 

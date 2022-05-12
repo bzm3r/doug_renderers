@@ -12,9 +12,8 @@ struct View {
 };
 
 struct Quad {
-    p0: vec2<f32>;
-    p1: vec2<f32>;
-    p2: vec2<f32>;
+    p0: vec4<f32>;
+    p1: vec4<f32>;
 };
 
 struct Quads {
@@ -39,15 +38,16 @@ struct VertexOutput {
 fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     var out: VertexOutput;
 
-    let instance_index = vertex_index / 6u;
+    // x >> 2, divides x by 2
+    let instance_index = vertex_index >> 2u;
     let quad = quads.data[instance_index];
 
     let xyz = vec3<i32>(i32(vertex_index & 0x1u), i32((vertex_index & 0x2u) >> 1u), 0);
     out.uv = vec2<f32>(xyz.xy);
-    let wh = quad.p1 - quad.p0;
+    let wh = quad.p1.xy - quad.p0.xy;
     let relative_pos = vec2<f32>(out.uv * wh);
 
-    out.world_position = vec4<f32>(quad.p0 + relative_pos, quad.p2.x, 1.0);
+    out.world_position = vec4<f32>(quad.p0.xy + relative_pos, quad.p1.z, 1.0);
     out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
     out.clip_position = view.view_proj * out.world_position;
@@ -65,6 +65,10 @@ struct FragmentInput {
 
 [[stage(fragment)]]
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
-    return in.color;
+    if (in.uv.x > 0.9 || in.uv.y > 0.9 || in.uv.x < 0.1 || in.uv.y < 0.1) {
+        return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    } else {
+        return vec4<f32>(1.0, 0.0, 0.0, 0.1);
+    }
 }
 

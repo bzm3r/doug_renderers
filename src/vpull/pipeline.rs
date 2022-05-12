@@ -82,7 +82,7 @@ impl FromWorld for VpullPipeline {
                 entry_point: "fragment".into(),
                 targets: vec![ColorTargetState {
                     format: TextureFormat::bevy_default(),
-                    blend: Some(BlendState::REPLACE),
+                    blend: Some(BlendState::ALPHA_BLENDING),
                     write_mask: ColorWrites::ALL,
                 }],
             }),

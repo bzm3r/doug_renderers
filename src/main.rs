@@ -67,33 +67,29 @@ fn setup(mut commands: Commands) {
 
     let mut batched_rects = BatchedQuads::default();
 
-    batched_rects.data.extend(vec![
-        DRect {
-            p0: Point { x: 0.0, y: 0.0 },
-            p1: Point { x: 1.0, y: 1.0 },
-            z: 1.0,
-        },
-        DRect {
-            p0: Point { x: 0.5, y: 0.5 },
-            p1: Point { x: 1.5, y: 1.5 },
-            z: 1.0,
-        },
-        DRect {
-            p0: Point { x: 1.0, y: 1.0 },
-            p1: Point { x: 2.0, y: 2.0 },
-            z: 1.0,
-        },
-        DRect {
-            p0: Point { x: 1.5, y: 1.5 },
-            p1: Point { x: 2.5, y: 2.5 },
-            z: 1.0,
-        },
-        DRect {
-            p0: Point { x: 2.0, y: 2.0 },
-            p1: Point { x: 3.0, y: 3.0 },
-            z: 1.0,
-        },
-    ]);
+    // let scale = 1.0 / 10.0;
+    // let rects: Vec<DRect> = (0..9)
+    //     .map(|ix| {
+    //         let ix = ix as f32;
+    //         DRect {
+    //             p0: Point {
+    //                 x: ix * scale,
+    //                 y: ix * scale,
+    //             },
+    //             p1: Point {
+    //                 x: (1.25 * ix + 1.0) * scale,
+    //                 y: (1.25 * ix + 1.0) * scale,
+    //             },
+    //             z: ix * scale,
+    //         }
+    //     })
+    //     .collect();
+    let rects: Vec<DRect> = vec![DRect {
+        p0: Point { x: -10.0, y: -10.0 },
+        p1: Point { x: 10.0, y: 10.0 },
+        z: 0.0,
+    }];
+    batched_rects.data = rects;
     commands.spawn_bundle((batched_rects,));
 }
 

@@ -8,17 +8,15 @@ use crate::DRect;
 #[derive(Clone, Copy, Debug, Default, Pod, Zeroable)]
 #[repr(C)]
 pub struct GpuQuad {
-    p0: Vec2,
-    p1: Vec2,
-    z: Vec2,
+    p0: Vec4,
+    p1: Vec4,
 }
 
 impl From<&DRect> for GpuQuad {
     fn from(rect: &DRect) -> Self {
         Self {
-            p0: Vec2::new(rect.p0.x, rect.p0.y),
-            p1: Vec2::new(rect.p1.x, rect.p1.y),
-            z: Vec2::new(rect.z, 0.0),
+            p0: Vec4::new(rect.p0.x, rect.p0.y, 0.0, 0.0),
+            p1: Vec4::new(rect.p1.x, rect.p1.y, rect.z, 0.0),
         }
     }
 }
