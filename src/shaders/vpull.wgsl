@@ -54,7 +54,7 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     let wh = quad.p1.xy - quad.p0.xy;
     let relative_pos = vec2<f32>(uv * wh);
 
-    let world_pos = vec4<f32>(quad.p0.xy + relative_pos, 0.0, 1.0);
+    let world_pos = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
     //out.world_pos = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
     //out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
@@ -78,7 +78,7 @@ fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     if (in.delta_bdry.x < 0.1 || in.delta_bdry.y < 0.1 || in.delta_bdry.z < 0.1 || in.delta_bdry.w < 0.1) {
         return in.color;
     } else {
-        let c = vec4<f32>(local_color.xyz, 0.01);
+        let c = vec4<f32>(local_color.xyz, 0.2);
         return c;
     }
 }

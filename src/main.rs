@@ -77,7 +77,7 @@ fn setup(mut commands: Commands) {
                     x: 2.0 * ((1.25 * ix + 1.0) * scale),
                     y: (1.25 * ix + 1.0) * scale,
                 },
-                layer: ix,
+                layer: 0.0,
                 color: (ix as u32) % 2,
             }
         })
