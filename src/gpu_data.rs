@@ -54,10 +54,8 @@ pub struct GpuPalette {
 
 impl Default for GpuPalette {
     fn default() -> Self {
-        let mut result = Self {
+        Self {
             data: BufferVec::<[f32; 4]>::new(BufferUsages::STORAGE),
-        };
-        result.data.push([1.0, 1.0, 1.0, 1.0]);
-        result
+        }
     }
 }

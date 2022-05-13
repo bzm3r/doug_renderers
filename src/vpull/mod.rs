@@ -41,7 +41,7 @@ impl Plugin for VpullPlugin {
             .add_render_command::<QuadsPhaseItem, DrawQuadsVertexPulling>()
             .init_resource::<VpullPipeline>()
             .init_resource::<GpuQuads>()
-            // .init_resource::<Palette>()
+            .init_resource::<Palette>()
             .init_resource::<GpuPalette>()
             .add_system_to_stage(RenderStage::Extract, extract_quads_phase)
             .add_system_to_stage(RenderStage::Extract, extract_quads)
@@ -86,7 +86,7 @@ impl Default for Palette {
                 .into_iter()
                 .map(|c| Color::hex(c).unwrap())
                 .collect::<Vec<Color>>(),
-            ..default()
+            prepared: false,
         }
     }
 }
@@ -115,7 +115,6 @@ fn extract_quads(
     mut commands: Commands,
     mut batched_quads_query: Query<(Entity, &mut BatchedQuads)>,
 ) {
-    //println!("extracting quads!");
     for (entity, mut batched_quads) in batched_quads_query.iter_mut() {
         if !batched_quads.extracted {
             let extracted_quads = ExtractedQuads {
@@ -147,7 +146,7 @@ fn prepare_quads(
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
     mut gpu_quads: ResMut<GpuQuads>,
-    // mut palette: ResMut<Palette>,
+    mut palette: ResMut<Palette>,
     mut gpu_palette: ResMut<GpuPalette>,
     quads_pipeline: Res<VpullPipeline>,
 ) {
@@ -180,20 +179,18 @@ fn prepare_quads(
             gpu_quads
                 .instances
                 .write_buffer(&*render_device, &*render_queue);
+        }
+
+        if !palette.prepared {
+            for color in palette.colors.iter() {
+                gpu_palette.data.push(color.as_rgba_f32());
+            }
             gpu_palette
                 .data
                 .write_buffer(&*render_device, &*render_queue);
-            println!("finished preparing quads.");
+            palette.prepared = true;
         }
-        // if !palette.prepared {
-        //     for color in palette.colors.iter() {
-        //         gpu_palette.data.push(color.as_rgba_f32());
-        //     }
-        //     gpu_palette
-        //         .data
-        //         .write_buffer(&*render_device, &*render_queue);
-        //     palette.prepared = true;
-        // }
+
         commands
             .get_or_spawn(entity)
             .insert_bundle((GpuDataBindGroup {

@@ -60,8 +60,7 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
 
     out.delta_bdry = vec4<f32>(world_pos.xy - quad.p0, quad.p1 - world_pos.xy);
     out.clip_position = view.view_proj * world_pos;
-    out.color = palette.colors[0];
-    //vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    out.color = palette.colors[quad.color];
     // palette[quad.color];
     return out;
 }

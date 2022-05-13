@@ -12,10 +12,11 @@ fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             title: "doug_renderer".into(),
-            width: 1280.0,
-            height: 720.0,
+            width: 1920.0,
+            height: 1080.0,
             ..Default::default()
         })
+        .insert_resource(ClearColor(Color::BLACK))
         .add_plugins(DefaultPlugins)
         // .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
@@ -77,8 +78,8 @@ fn setup(mut commands: Commands) {
                     x: 2.0 * ((1.25 * ix + 1.0) * scale),
                     y: (1.25 * ix + 1.0) * scale,
                 },
-                layer: 0.0,
-                color: (ix as u32) % 2,
+                layer: ix,
+                color: (ix as u32) % 5,
             }
         })
         .collect();
