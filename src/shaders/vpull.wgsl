@@ -4,7 +4,7 @@ struct View {
     view: mat4x4<f32>;
     inverse_view: mat4x4<f32>;
     projection: mat4x4<f32>;
-    world_position: vec3<f32>;
+    world_pos: vec3<f32>;
     near: f32;
     far: f32;
     width: f32;
@@ -37,10 +37,8 @@ var<storage> palette: Palette;
 
 struct VertexOutput {
     [[builtin(position)]] clip_position: vec4<f32>;
-    [[location(0)]] world_position: vec4<f32>;
-    [[location(1)]] world_normal: vec3<f32>;
-    [[location(2)]] uv: vec2<f32>;
-    [[location(3)]] color: vec4<f32>;
+    [[location(0)]] delta_bdry: vec4<f32>;
+    [[location(1)]] color: vec4<f32>;
 };
 
 [[stage(vertex)]]
@@ -52,15 +50,16 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     let quad = quads.data[instance_index];
 
     let xyz = vec3<i32>(i32(vertex_index & 0x1u), i32((vertex_index & 0x2u) >> 1u), 0);
-    out.uv = vec2<f32>(xyz.xy);
+    let uv = vec2<f32>(xyz.xy);
     let wh = quad.p1.xy - quad.p0.xy;
-    let relative_pos = vec2<f32>(out.uv * wh);
+    let relative_pos = vec2<f32>(uv * wh);
 
-    out.world_position = vec4<f32>(quad.p0.xy + relative_pos, 0.0, 1.0);
-    //out.world_position = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
-    out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
+    let world_pos = vec4<f32>(quad.p0.xy + relative_pos, 0.0, 1.0);
+    //out.world_pos = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
+    //out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
-    out.clip_position = view.view_proj * out.world_position;
+    out.delta_bdry = vec4<f32>(world_pos.xy - quad.p0, quad.p1 - world_pos.xy);
+    out.clip_position = view.view_proj * world_pos;
     out.color = palette.colors[0];
     //vec4<f32>(1.0, 1.0, 1.0, 1.0);
     // palette[quad.color];
@@ -69,19 +68,17 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
 
 struct FragmentInput {
     [[builtin(front_facing)]] is_front: bool;
-    [[location(0)]] world_position: vec4<f32>;
-    [[location(1)]] world_normal: vec3<f32>;
-    [[location(2)]] uv: vec2<f32>;
-    [[location(3)]] color: vec4<f32>;
+    [[location(0)]] delta_bdry: vec4<f32>;
+    [[location(1)]] color: vec4<f32>;
 };
 
 [[stage(fragment)]]
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
-    if (in.uv.x > 0.9 || in.uv.y > 0.9 || in.uv.x < 0.1 || in.uv.y < 0.1) {
+    if (in.delta_bdry.x < 0.1 || in.delta_bdry.y < 0.1 || in.delta_bdry.z < 0.1 || in.delta_bdry.w < 0.1) {
         return in.color;
     } else {
-        let c = vec4<f32>(local_color.xyx, 0.5);
+        let c = vec4<f32>(local_color.xyz, 0.01);
         return c;
     }
 }
