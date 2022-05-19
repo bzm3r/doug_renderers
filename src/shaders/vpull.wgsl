@@ -78,7 +78,7 @@ struct FragmentInput {
 [[stage(fragment)]]
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
-    let t = 0.5;
+    let t = 0.05;
     if (in.d_bot_left.x < t || in.d_bot_left.y < t || in.d_top_right.x < t || in.d_top_right.y < t) {
         return in.color;
     } else {
