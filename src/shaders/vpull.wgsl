@@ -36,7 +36,7 @@ var<storage> quads: Quads;
 var<storage> palette: Palette;
 
 struct VertexOutput {
-    [[builtin(position)]] clip_position: vec4<f32>;
+    [[builtin(position)]] screen_pos: vec4<f32>;
     [[location(0)]] d_bot_left: vec2<f32>;
     [[location(1)]] d_top_right: vec2<f32>;
     [[location(2)]] color: vec4<f32>;
@@ -61,7 +61,7 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
 
     out.d_bot_left = vec2<f32>(world_pos.xy - quad.p0);
     out.d_top_right = vec2<f32>(quad.p1 - world_pos.xy);
-    out.clip_position = view.view_proj * world_pos;
+    out.screen_pos = view.view_proj * world_pos;
     out.color = palette.colors[0];
     //vec4<f32>(1.0, 1.0, 1.0, 1.0);
     // palette[quad.color];
@@ -70,6 +70,7 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
 
 struct FragmentInput {
     [[builtin(front_facing)]] is_front: bool;
+    [[builtin(position)]] screen_pos: vec4<f32>;
     [[location(0)]] d_bot_left: vec2<f32>;
     [[location(1)]] d_top_right: vec2<f32>;
     [[location(2)]] color: vec4<f32>;
@@ -79,11 +80,12 @@ struct FragmentInput {
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
     let t = 0.05;
-    if (in.d_bot_left.x < t || in.d_bot_left.y < t || in.d_top_right.x < t || in.d_top_right.y < t) {
-        return in.color;
-    } else {
-        let c = vec4<f32>(local_color.xyz, 0.2);
-        return c;
-    }
+    let blur = t;
+    let abs_zoom = abs(in.screen_pos.z);
+    let zoomed_blur = smoothStep(0.2, 0.6, abs_zoom) * blur;
+    let min_d = min(min(in.d_bot_left.x, in.d_bot_left.y), min(in.d_top_right.x, in.d_top_right.y));
+    let alpha = max(1.0 - smoothStep(t - zoomed_blur, t + zoomed_blur, min_d), 0.2);
+    let c = vec4<f32>(local_color.xyz, alpha);
+    return c;
 }
 
