@@ -36,9 +36,10 @@ var<storage> quads: Quads;
 var<storage> palette: Palette;
 
 struct VertexOutput {
-    [[builtin(position)]] clip_position: vec4<f32>;
-    [[location(0)]] delta_bdry: vec4<f32>;
-    [[location(1)]] color: vec4<f32>;
+    [[builtin(position)]] screen_pos: vec4<f32>;
+    [[location(0)]] d_bot_left: vec2<f32>;
+    [[location(1)]] d_top_right: vec2<f32>;
+    [[location(2)]] color: vec4<f32>;
 };
 
 [[stage(vertex)]]
@@ -58,27 +59,33 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     //out.world_pos = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
     //out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
-    out.delta_bdry = vec4<f32>(world_pos.xy - quad.p0, quad.p1 - world_pos.xy);
-    out.clip_position = view.view_proj * world_pos;
-    out.color = palette.colors[quad.color];
+    out.d_bot_left = vec2<f32>(world_pos.xy - quad.p0);
+    out.d_top_right = vec2<f32>(quad.p1 - world_pos.xy);
+    out.screen_pos = view.view_proj * world_pos;
+    out.color = palette.colors[0];
+    //vec4<f32>(1.0, 1.0, 1.0, 1.0);
     // palette[quad.color];
     return out;
 }
 
 struct FragmentInput {
     [[builtin(front_facing)]] is_front: bool;
-    [[location(0)]] delta_bdry: vec4<f32>;
-    [[location(1)]] color: vec4<f32>;
+    [[builtin(position)]] screen_pos: vec4<f32>;
+    [[location(0)]] d_bot_left: vec2<f32>;
+    [[location(1)]] d_top_right: vec2<f32>;
+    [[location(2)]] color: vec4<f32>;
 };
 
 [[stage(fragment)]]
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
-    if (in.delta_bdry.x < 0.1 || in.delta_bdry.y < 0.1 || in.delta_bdry.z < 0.1 || in.delta_bdry.w < 0.1) {
-        return in.color;
-    } else {
-        let c = vec4<f32>(local_color.xyz, 0.2);
-        return c;
-    }
+    let t = 1.0;
+    let blur = t;
+    let abs_zoom = abs(in.screen_pos.z);
+    let zoomed_blur = smoothStep(0.2, 0.6, abs_zoom) * blur;
+    let min_d = min(min(in.d_bot_left.x, in.d_bot_left.y), min(in.d_top_right.x, in.d_top_right.y));
+    let alpha = max(1.0 - smoothStep(t - zoomed_blur, t + zoomed_blur, min_d), 0.2);
+    let c = vec4<f32>(local_color.xyz, alpha);
+    return c;
 }
 

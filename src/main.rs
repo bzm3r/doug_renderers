@@ -65,18 +65,20 @@ fn setup(mut commands: Commands) {
 
     let mut batched_rects = BatchedQuads::default();
 
-    let scale = 10.0 / 10.0;
-    let rects: Vec<DRect> = (0..9)
+    let scale = 10.0;
+    let translate = 10.0;
+    let p1_scale = 10.0;
+    let rects: Vec<DRect> = (0..1)
         .map(|ix| {
             let ix = ix as f32;
             DRect {
                 p0: Point {
-                    x: ix * scale,
-                    y: ix * scale,
+                    x: ix * scale - translate,
+                    y: ix * scale - translate,
                 },
                 p1: Point {
-                    x: 2.0 * ((1.25 * ix + 1.0) * scale),
-                    y: (1.25 * ix + 1.0) * scale,
+                    x: p1_scale * ((1.25 * ix + 1.0) * scale) - translate,
+                    y: (1.25 * ix + 1.0) * scale - translate,
                 },
                 layer: ix,
                 color: (ix as u32) % 5,
