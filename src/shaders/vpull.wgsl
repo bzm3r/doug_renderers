@@ -79,7 +79,7 @@ struct FragmentInput {
 [[stage(fragment)]]
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
-    let t = 0.05;
+    let t = 1.0;
     let blur = t;
     let abs_zoom = abs(in.screen_pos.z);
     let zoomed_blur = smoothStep(0.2, 0.6, abs_zoom) * blur;
