@@ -56,11 +56,11 @@ pub struct BatchedQuads {
 }
 
 fn setup(mut commands: Commands) {
+    let mut camera = OrthographicCameraBundle::new_3d();
+    camera.orthographic_projection.scale = 75.0;
+    camera.transform = Transform::from_translation(50.0 * Vec3::Z).looking_at(Vec3::ZERO, Vec3::Y);
     commands
-        .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_translation(50.0 * Vec3::Z).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        })
+        .spawn_bundle(camera)
         .insert(CameraController::default());
 
     let mut batched_rects = BatchedQuads::default();
@@ -144,11 +144,18 @@ fn camera_controller(
     mut mouse_events: EventReader<MouseMotion>,
     mouse_button_input: Res<Input<MouseButton>>,
     key_input: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Transform, &mut CameraController), With<Camera>>,
+    mut query: Query<
+        (
+            &mut Transform,
+            &mut OrthographicProjection,
+            &mut CameraController,
+        ),
+        With<Camera>,
+    >,
 ) {
     let dt = time.delta_seconds();
 
-    if let Ok((mut transform, mut options)) = query.get_single_mut() {
+    if let Ok((mut transform, mut ortho_projection, mut options)) = query.get_single_mut() {
         if !options.initialized {
             let (yaw, pitch, _roll) = transform.rotation.to_euler(EulerRot::YXZ);
             options.yaw = yaw;
@@ -195,11 +202,14 @@ fn camera_controller(
                 options.velocity = Vec3::ZERO;
             }
         }
-        let forward = transform.forward();
+        let forward = 1.0;
         let right = transform.right();
         transform.translation += options.velocity.x * dt * right
             + options.velocity.y * dt * Vec3::Y
             + options.velocity.z * dt * forward;
+        ortho_projection.scale =
+            (ortho_projection.scale + options.velocity.z * dt * forward).max(0.0);
+        println!("current scale: {}", ortho_projection.scale);
 
         // Handle mouse input
         let mut mouse_delta = Vec2::ZERO;

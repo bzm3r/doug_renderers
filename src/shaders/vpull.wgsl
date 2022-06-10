@@ -80,9 +80,9 @@ struct FragmentInput {
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
     let t = 1.0;
-    let blur = t;
+    let blur = 0.25 * t;
     let abs_zoom = abs(in.screen_pos.z);
-    let zoomed_blur = smoothStep(0.2, 0.6, abs_zoom) * blur;
+    let zoomed_blur = abs_zoom * abs_zoom * blur;
     let min_d = min(min(in.d_bot_left.x, in.d_bot_left.y), min(in.d_top_right.x, in.d_top_right.y));
     let alpha = max(1.0 - smoothStep(t - zoomed_blur, t + zoomed_blur, min_d), 0.2);
     let c = vec4<f32>(local_color.xyz, alpha);
