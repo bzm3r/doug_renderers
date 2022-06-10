@@ -56,9 +56,9 @@ pub struct BatchedQuads {
 }
 
 fn setup(mut commands: Commands) {
-    let mut camera = OrthographicCameraBundle::new_3d();
+    let mut camera = OrthographicCameraBundle::new_2d();
     camera.orthographic_projection.scale = 75.0;
-    camera.transform = Transform::from_translation(50.0 * Vec3::Z).looking_at(Vec3::ZERO, Vec3::Y);
+    // camera.transform = Transform::from_translation(50.0 * Vec3::Z).looking_at(Vec3::ZERO, Vec3::Y);
     commands
         .spawn_bundle(camera)
         .insert(CameraController::default());
@@ -209,7 +209,6 @@ fn camera_controller(
             + options.velocity.z * dt * forward;
         ortho_projection.scale =
             (ortho_projection.scale + options.velocity.z * dt * forward).max(0.0);
-        println!("current scale: {}", ortho_projection.scale);
 
         // Handle mouse input
         let mut mouse_delta = Vec2::ZERO;

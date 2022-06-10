@@ -2,9 +2,9 @@ mod pipeline;
 mod render_command;
 mod render_graph;
 
-use bevy::core_pipeline::draw_3d_graph;
+use bevy::core_pipeline::draw_2d_graph;
 use bevy::prelude::*;
-use bevy::render::camera::{ActiveCamera, Camera3d};
+use bevy::render::camera::{ActiveCamera, Camera2d};
 use bevy::render::render_graph::RenderGraph;
 use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase};
 use bevy::render::render_resource::{
@@ -28,7 +28,7 @@ pub struct VpullPlugin;
 
 impl Plugin for VpullPlugin {
     fn build(&self, app: &mut App) {
-        println!("building vertex pull plugin!");
+        info!("building vertex pull plugin!");
         app.world.resource_mut::<Assets<Shader>>().set_untracked(
             QUADS_SHADER_HANDLE,
             Shader::from_wgsl(include_str!("../shaders/vpull.wgsl")),
@@ -52,15 +52,15 @@ impl Plugin for VpullPlugin {
         // connect vpull as a node before the main render graph node
         let vpull_pass_node = VpullPassNode::new(&mut render_app.world);
         let mut graph = render_app.world.resource_mut::<RenderGraph>();
-        let draw_3d_graph = graph.get_sub_graph_mut(draw_3d_graph::NAME).unwrap();
-        draw_3d_graph.add_node(VPULL_PASS, vpull_pass_node);
-        draw_3d_graph
-            .add_node_edge(VPULL_PASS, draw_3d_graph::node::MAIN_PASS)
+        let draw_2d_graph = graph.get_sub_graph_mut(draw_2d_graph::NAME).unwrap();
+        draw_2d_graph.add_node(VPULL_PASS, vpull_pass_node);
+        draw_2d_graph
+            .add_node_edge(VPULL_PASS, draw_2d_graph::node::MAIN_PASS)
             .unwrap();
-        draw_3d_graph
+        draw_2d_graph
             .add_slot_edge(
-                draw_3d_graph.input_node().unwrap().id,
-                draw_3d_graph::input::VIEW_ENTITY,
+                draw_2d_graph.input_node().unwrap().id,
+                draw_2d_graph::input::VIEW_ENTITY,
                 VPULL_PASS,
                 VpullPassNode::IN_VIEW,
             )
@@ -101,8 +101,9 @@ impl Default for Palette {
 // only copying the relevant components.
 //
 // Entities and components of the render app are cleared every tick, so we must reset them every tick.
-fn extract_quads_phase(mut commands: Commands, active_3d: Res<ActiveCamera<Camera3d>>) {
-    if let Some(entity) = active_3d.get() {
+fn extract_quads_phase(mut commands: Commands, active_2d: Res<ActiveCamera<Camera2d>>) {
+    if let Some(entity) = active_2d.get() {
+        info!("Found a camera!");
         commands
             .get_or_spawn(entity)
             .insert(RenderPhase::<QuadsPhaseItem>::default());
@@ -125,7 +126,7 @@ fn extract_quads(
                 .get_or_spawn(entity)
                 .insert(extracted_quads.clone());
             batched_quads.extracted = true;
-            println!("finished extracting quads.");
+            info!("finished extracting quads.");
         } else {
             commands.get_or_spawn(entity).insert(ExtractedQuads {
                 data: Vec::new(),
@@ -156,9 +157,9 @@ fn prepare_quads(
             for quad in quads.data.iter() {
                 gpu_quads.instances.push(GpuQuad::from(quad));
             }
-            println!("count of rects: {}", gpu_quads.instances.len());
+            info!("count of rects: {}", gpu_quads.instances.len());
             gpu_quads.index_count = gpu_quads.instances.len() as u32 * 6;
-            println!("index count: {}", gpu_quads.index_count);
+            info!("index count: {}", gpu_quads.index_count);
             let mut indices = Vec::with_capacity(gpu_quads.index_count as usize);
             for i in 0..gpu_quads.instances.len() {
                 let base = (i * 4) as u32;
@@ -215,11 +216,11 @@ fn prepare_quads(
 // QUEUE:
 // This "queues" render jobs that feed off of "prepared" data.
 fn queue_quads(
-    opaque_3d_draw_functions: Res<DrawFunctions<QuadsPhaseItem>>,
+    opaque_2d_draw_functions: Res<DrawFunctions<QuadsPhaseItem>>,
     mut views: Query<&mut RenderPhase<QuadsPhaseItem>>,
     quads_query: Query<Entity, With<ExtractedQuads>>,
 ) {
-    let draw_quads = opaque_3d_draw_functions
+    let draw_quads = opaque_2d_draw_functions
         .read()
         .get_id::<DrawQuadsVertexPulling>()
         .unwrap();
