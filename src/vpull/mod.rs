@@ -103,7 +103,6 @@ impl Default for Palette {
 // Entities and components of the render app are cleared every tick, so we must reset them every tick.
 fn extract_quads_phase(mut commands: Commands, active_2d: Res<ActiveCamera<Camera2d>>) {
     if let Some(entity) = active_2d.get() {
-        info!("Found a camera!");
         commands
             .get_or_spawn(entity)
             .insert(RenderPhase::<QuadsPhaseItem>::default());

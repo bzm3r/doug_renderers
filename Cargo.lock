@@ -427,6 +427,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_pancam"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c834b1f2cb46d46b0f092c64933cac7dd86da65eb7f473915f6c773a543e9cfb"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_pbr"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1023,6 +1032,7 @@ name = "doug_renderers"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_pancam",
  "bytemuck",
 ]
 

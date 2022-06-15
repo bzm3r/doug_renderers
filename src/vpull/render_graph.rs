@@ -33,6 +33,7 @@ impl render_graph::Node for MainNode {
         _render_context: &mut RenderContext,
         _world: &World,
     ) -> Result<(), NodeRunError> {
+        info!("running subgraph!");
         Err(NodeRunError::RunSubGraphError(
             RunSubGraphError::MissingSubGraph("error".into()),
         ))
@@ -43,11 +44,7 @@ pub const VPULL_PASS: &str = "VPULL_PASS";
 
 pub struct VpullPassNode {
     query: QueryState<
-        (
-            &'static RenderPhase<QuadsPhaseItem>,
-            &'static ViewTarget,
-            &'static ViewDepthTexture,
-        ),
+        (&'static RenderPhase<QuadsPhaseItem>, &'static ViewTarget),
         With<ExtractedView>,
     >,
 }
@@ -77,8 +74,9 @@ impl render_graph::Node for VpullPassNode {
         render_context: &mut RenderContext,
         world: &World,
     ) -> Result<(), NodeRunError> {
+        info!("Running vertex pulling node!");
         let view_entity = graph.get_input_entity(Self::IN_VIEW)?;
-        let (quads_phase, target, depth) = match self.query.get_manual(world, view_entity) {
+        let (quads_phase, target) = match self.query.get_manual(world, view_entity) {
             Ok(query) => query,
             Err(_) => return Ok(()), // No window
         };
@@ -93,15 +91,7 @@ impl render_graph::Node for VpullPassNode {
                 load: LoadOp::Load,
                 store: true,
             })],
-            depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
-                view: &depth.view,
-                // NOTE: The quads main pass loads the depth buffer and possibly overwrites it
-                depth_ops: Some(Operations {
-                    load: LoadOp::Load,
-                    store: true,
-                }),
-                stencil_ops: None,
-            }),
+            depth_stencil_attachment: None,
         };
 
         let draw_functions = world.resource::<DrawFunctions<QuadsPhaseItem>>();
@@ -112,6 +102,7 @@ impl render_graph::Node for VpullPassNode {
         let mut draw_functions = draw_functions.write();
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
         for item in &quads_phase.items {
+            info!("found a QuadsPhaseItem");
             let draw_function = draw_functions.get_mut(item.draw_function).unwrap();
             draw_function.draw(world, &mut tracked_pass, view_entity, item);
         }
