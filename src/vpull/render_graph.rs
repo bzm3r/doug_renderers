@@ -33,7 +33,6 @@ impl render_graph::Node for MainNode {
         _render_context: &mut RenderContext,
         _world: &World,
     ) -> Result<(), NodeRunError> {
-        info!("running subgraph!");
         Err(NodeRunError::RunSubGraphError(
             RunSubGraphError::MissingSubGraph("error".into()),
         ))
@@ -74,7 +73,6 @@ impl render_graph::Node for VpullPassNode {
         render_context: &mut RenderContext,
         world: &World,
     ) -> Result<(), NodeRunError> {
-        info!("Running vertex pulling node!");
         let view_entity = graph.get_input_entity(Self::IN_VIEW)?;
         let (quads_phase, target) = match self.query.get_manual(world, view_entity) {
             Ok(query) => query,
@@ -102,7 +100,6 @@ impl render_graph::Node for VpullPassNode {
         let mut draw_functions = draw_functions.write();
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
         for item in &quads_phase.items {
-            info!("found a QuadsPhaseItem");
             let draw_function = draw_functions.get_mut(item.draw_function).unwrap();
             draw_function.draw(world, &mut tracked_pass, view_entity, item);
         }

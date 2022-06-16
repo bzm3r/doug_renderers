@@ -56,16 +56,12 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     let relative_pos = vec2<f32>(uv * wh);
 
     let world_pos = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
-    //out.world_pos = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
-    //out.world_normal = vec3<f32>(0.0, 0.0, 1.0);
 
     out.d_bot_left = vec2<f32>(world_pos.xy - quad.p0);
     out.d_top_right = vec2<f32>(quad.p1 - world_pos.xy);
     out.screen_pos = view.view_proj * world_pos;
     out.screen_pos.z = 0.5;
-    out.color = palette.colors[0];
-    //vec4<f32>(1.0, 1.0, 1.0, 1.0);
-    // palette[quad.color];
+    out.color = palette.colors[quad.color];
     return out;
 }
 
@@ -81,12 +77,11 @@ struct FragmentInput {
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
     let t = 1.0;
-    let blur = 0.25 * t;
-    let abs_zoom = abs(in.screen_pos.z);
-    let zoomed_blur = abs_zoom * abs_zoom * blur;
-    let min_d = min(min(in.d_bot_left.x, in.d_bot_left.y), min(in.d_top_right.x, in.d_top_right.y));
-    let alpha = max(1.0 - smoothStep(t - zoomed_blur, t + zoomed_blur, min_d), 0.2);
-    let c = vec4<f32>(local_color.xyz, alpha);
-    return c;
+    if (in.d_bot_left.x < t || in.d_bot_left.y < t || in.d_top_right.x < t || in.d_top_right.y < t) {
+        return in.color;
+    } else {
+        let c = vec4<f32>(local_color.xyz, 0.2);
+        return c;
+    }
 }
 
