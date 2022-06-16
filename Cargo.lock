@@ -1034,6 +1034,7 @@ dependencies = [
  "bevy",
  "bevy_pancam",
  "bytemuck",
+ "rand",
 ]
 
 [[package]]

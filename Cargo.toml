@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 bytemuck = "1.9.1"
 bevy_pancam = "0.3.0"
+rand = "0.8.5"
 
 [dependencies.bevy]
 version = "0.7.0"

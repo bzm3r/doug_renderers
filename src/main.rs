@@ -3,12 +3,12 @@ mod phase_item;
 mod state;
 mod vpull;
 
-use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bevy::{app::App, diagnostic::LogDiagnosticsPlugin, window::WindowDescriptor};
 use vpull::VpullPlugin;
 
 use bevy_pancam::{PanCam, PanCamPlugin};
+use rand::Rng;
 
 fn main() {
     App::new()
@@ -45,9 +45,39 @@ pub struct DRect {
     pub color: u32,
 }
 
+fn random_point<R: Rng + ?Sized>(rng: &mut R, min: Point, max: Point) -> Point {
+    Point {
+        x: rng.gen_range(min.x..max.x),
+        y: rng.gen_range(min.y..max.y),
+    }
+}
+
+impl DRect {
+    pub fn random<R: Rng + ?Sized>(rng: &mut R, min: Point, max: Point) -> Self {
+        DRect {
+            p0: random_point(rng, min, max),
+            p1: random_point(rng, min, max),
+            layer: 0.0,
+            color: rng.gen_range(0..5),
+        }
+    }
+
+    pub fn randomly_placed<R: Rng + ?Sized>(rng: &mut R, min: Point, max: Point) -> Self {
+        let p0 = random_point(rng, min, max);
+        DRect {
+            p0,
+            p1: Point {
+                x: p0.x + 1.0,
+                y: p0.y + 1.0,
+            },
+            layer: 0.0,
+            color: rng.gen_range(0..5),
+        }
+    }
+}
+
 pub struct LayerRects {
     pub rects: Vec<DRect>,
-    //pub color: Color,
     pub index: u8,
 }
 
@@ -59,18 +89,12 @@ pub struct BatchedQuads {
 }
 
 fn setup(mut commands: Commands) {
-    // let mut camera = OrthographicCameraBundle::new_2d();
-    // // camera.orthographic_projection.scale = 75.0;
-    // // camera.transform = Transform::from_translation(50.0 * Vec3::Z).looking_at(Vec3::ZERO, Vec3::Y);
-    // commands.spawn_bundle(camera).insert(PanCam::default());
-    // // .insert(CameraController::default());
-
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
         .insert(PanCam::default());
 
     let mut batched_rects = BatchedQuads::default();
-    let rects = overlapping_rects(5);
+    let rects = many_small_random_rects(1_000_000);
     batched_rects.data = rects;
     commands.spawn_bundle((batched_rects,));
 }
@@ -95,4 +119,38 @@ fn overlapping_rects(n: u32) -> Vec<DRect> {
             }
         })
         .collect()
+}
+
+fn many_random_rects(n: usize) -> Vec<DRect> {
+    let mut result = Vec::with_capacity(n);
+
+    let min = Point {
+        x: -300.0,
+        y: -300.0,
+    };
+    let max = Point { x: 300.0, y: 300.0 };
+
+    let mut rng = rand::thread_rng();
+    for _ in 0..n {
+        result.push(DRect::random(&mut rng, min, max))
+    }
+
+    result
+}
+
+fn many_small_random_rects(n: usize) -> Vec<DRect> {
+    let mut result = Vec::with_capacity(n);
+
+    let min = Point {
+        x: -300.0,
+        y: -300.0,
+    };
+    let max = Point { x: 300.0, y: 300.0 };
+
+    let mut rng = rand::thread_rng();
+    for _ in 0..n {
+        result.push(DRect::randomly_placed(&mut rng, min, max))
+    }
+
+    result
 }
