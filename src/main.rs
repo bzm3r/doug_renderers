@@ -41,7 +41,7 @@ pub struct Point {
 pub struct DRect {
     pub p0: Point,
     pub p1: Point,
-    pub layer: f32,
+    pub stroke_width: f32,
     pub color: u32,
 }
 
@@ -57,7 +57,7 @@ impl DRect {
         DRect {
             p0: random_point(rng, min, max),
             p1: random_point(rng, min, max),
-            layer: 0.0,
+            stroke_width: 0.1,
             color: rng.gen_range(0..5),
         }
     }
@@ -70,7 +70,7 @@ impl DRect {
                 x: p0.x + 1.0,
                 y: p0.y + 1.0,
             },
-            layer: 0.0,
+            stroke_width: 0.1,
             color: rng.gen_range(0..5),
         }
     }
@@ -94,7 +94,7 @@ fn setup(mut commands: Commands) {
         .insert(PanCam::default());
 
     let mut batched_rects = BatchedQuads::default();
-    let rects = many_small_random_rects(1_000_000);
+    let rects = overlapping_rects(5);
     batched_rects.data = rects;
     commands.spawn_bundle((batched_rects,));
 }
@@ -114,7 +114,7 @@ fn overlapping_rects(n: u32) -> Vec<DRect> {
                     x: (1.25 * i + 1.0) * scale - translate,
                     y: (1.25 * i + 1.0) * scale - translate,
                 },
-                layer: i,
+                stroke_width: 1.0 * i,
                 color: ix % 5,
             }
         })

@@ -14,7 +14,7 @@ struct View {
 struct Quad {
     p0: vec2<f32>;
     p1: vec2<f32>;
-    layer: f32;
+    stroke_width: f32;
     color: u32;
 };
 
@@ -40,6 +40,7 @@ struct VertexOutput {
     [[location(0)]] d_bot_left: vec2<f32>;
     [[location(1)]] d_top_right: vec2<f32>;
     [[location(2)]] color: vec4<f32>;
+    [[location(3), interpolate(flat)]] stroke_width: f32;
 };
 
 [[stage(vertex)]]
@@ -55,12 +56,13 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     let wh = quad.p1.xy - quad.p0.xy;
     let relative_pos = vec2<f32>(uv * wh);
 
-    let world_pos = vec4<f32>(quad.p0.xy + relative_pos, quad.layer, 1.0);
+    let world_pos = vec4<f32>(quad.p0.xy + relative_pos, 0.0, 1.0);
 
     out.d_bot_left = vec2<f32>(world_pos.xy - quad.p0);
     out.d_top_right = vec2<f32>(quad.p1 - world_pos.xy);
     out.screen_pos = view.view_proj * world_pos;
     out.color = palette.colors[quad.color];
+    out.stroke_width = quad.stroke_width;
     return out;
 }
 
@@ -70,12 +72,13 @@ struct FragmentInput {
     [[location(0)]] d_bot_left: vec2<f32>;
     [[location(1)]] d_top_right: vec2<f32>;
     [[location(2)]] color: vec4<f32>;
+    [[location(3), interpolate(flat)]] stroke_width: f32;
 };
 
 [[stage(fragment)]]
 fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var local_color = in.color;
-    let t = 1.0;
+    let t = in.stroke_width;
     if (in.d_bot_left.x < t || in.d_bot_left.y < t || in.d_top_right.x < t || in.d_top_right.y < t) {
         return in.color;
     } else {

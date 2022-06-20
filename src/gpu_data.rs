@@ -10,7 +10,7 @@ use crate::DRect;
 pub struct GpuQuad {
     pub p0: Vec2,
     pub p1: Vec2,
-    pub layer: f32,
+    pub stroke_width: f32,
     pub color: u32,
 }
 
@@ -19,7 +19,7 @@ impl From<&DRect> for GpuQuad {
         Self {
             p0: Vec2::new(rect.p0.x, rect.p0.y),
             p1: Vec2::new(rect.p1.x, rect.p1.y),
-            layer: rect.layer,
+            stroke_width: rect.stroke_width,
             color: rect.color,
         }
     }
