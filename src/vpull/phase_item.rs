@@ -3,12 +3,12 @@ use bevy::{
     render::render_phase::{DrawFunctionId, EntityPhaseItem, PhaseItem},
 };
 
-pub struct QuadsPhaseItem {
+pub struct VpullPhaseItem {
     pub entity: Entity,
     pub draw_function: DrawFunctionId,
 }
 
-impl PhaseItem for QuadsPhaseItem {
+impl PhaseItem for VpullPhaseItem {
     // The type used for ordering the items. The smallest values are drawn first.
     type SortKey = u32;
 
@@ -23,7 +23,7 @@ impl PhaseItem for QuadsPhaseItem {
     }
 }
 
-impl EntityPhaseItem for QuadsPhaseItem {
+impl EntityPhaseItem for VpullPhaseItem {
     #[inline]
     fn entity(&self) -> Entity {
         self.entity

@@ -9,8 +9,8 @@ use bevy::render::render_resource::{
 use bevy::render::view::{ExtractedView, ViewDepthTexture, ViewTarget};
 use bevy::render::{render_graph, renderer::RenderContext};
 
-use crate::phase_item::QuadsPhaseItem;
 use crate::state::RenderState;
+use crate::vpull::phase_item::VpullPhaseItem;
 
 pub struct MainNode {
     pub state: RenderState,
@@ -43,7 +43,7 @@ pub const VPULL_PASS: &str = "VPULL_PASS";
 
 pub struct VpullPassNode {
     query: QueryState<
-        (&'static RenderPhase<QuadsPhaseItem>, &'static ViewTarget),
+        (&'static RenderPhase<VpullPhaseItem>, &'static ViewTarget, &'static ViewDepthTexture),
         With<ExtractedView>,
     >,
 }
@@ -74,7 +74,7 @@ impl render_graph::Node for VpullPassNode {
         world: &World,
     ) -> Result<(), NodeRunError> {
         let view_entity = graph.get_input_entity(Self::IN_VIEW)?;
-        let (quads_phase, target) = match self.query.get_manual(world, view_entity) {
+        let (quads_phase, target, depth_texture) = match self.query.get_manual(world, view_entity) {
             Ok(query) => query,
             Err(_) => return Ok(()), // No window
         };
@@ -89,10 +89,18 @@ impl render_graph::Node for VpullPassNode {
                 load: LoadOp::Load,
                 store: true,
             })],
-            depth_stencil_attachment: None,
+            depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
+                view: &depth_texture.view,
+                // NOTE: The quads main pass loads the depth buffer and possibly overwrites it
+                depth_ops: Some(Operations {
+                    load: LoadOp::Load,
+                    store: true,
+                }),
+                stencil_ops: None,
+            }),
         };
 
-        let draw_functions = world.resource::<DrawFunctions<QuadsPhaseItem>>();
+        let draw_functions = world.resource::<DrawFunctions<VpullPhaseItem>>();
 
         let render_pass = render_context
             .command_encoder

@@ -107,7 +107,22 @@ impl FromWorld for VpullPipeline {
                 topology: PrimitiveTopology::TriangleList,
                 strip_index_format: None,
             },
-            depth_stencil: None,
+            depth_stencil: Some(DepthStencilState {
+                format: TextureFormat::Depth32Float,
+                depth_write_enabled: true,
+                depth_compare: CompareFunction::GreaterEqual,
+                stencil: StencilState {
+                    front: StencilFaceState::IGNORE,
+                    back: StencilFaceState::IGNORE,
+                    read_mask: 0,
+                    write_mask: 0,
+                },
+                bias: DepthBiasState {
+                    constant: 0,
+                    slope_scale: 0.0,
+                    clamp: 0.0,
+                },
+            }),
             multisample: MultisampleState {
                 count: Msaa::default().samples,
                 mask: !0,

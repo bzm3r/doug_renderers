@@ -62,6 +62,7 @@ fn vertex([[builtin(vertex_index)]] vertex_index: u32) -> VertexOutput {
     out.d_top_right = vec2<f32>(quad.p1 - world_pos.xy);
     out.screen_pos = view.view_proj * world_pos;
     out.color = palette.colors[quad.color];
+    out.screen_pos.z = out.color.a;
     out.stroke_width = quad.stroke_width;
     return out;
 }

@@ -1,28 +1,32 @@
 mod pipeline;
 mod render_command;
 mod render_graph;
+mod phase_item;
 
 use bevy::core_pipeline::draw_2d_graph;
 use bevy::prelude::*;
-use bevy::render::camera::{ActiveCamera, Camera2d};
+use bevy::render::camera::{ActiveCamera, Camera2d, ExtractedCamera};
 use bevy::render::render_graph::RenderGraph;
 use bevy::render::render_phase::{AddRenderCommand, DrawFunctions, RenderPhase};
 use bevy::render::render_resource::{
-    BindGroupDescriptor, BindGroupEntry, BufferInitDescriptor, BufferUsages,
+    BindGroupDescriptor, BindGroupEntry, BufferInitDescriptor, BufferUsages, TextureDescriptor, Extent3d, TextureDimension, TextureFormat, TextureUsages,
 };
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 
 use bevy::app::{App, Plugin};
+use bevy::render::texture::TextureCache;
+use bevy::render::view::ViewDepthTexture;
 use bevy::render::{RenderApp, RenderStage};
+use bevy::utils::HashMap;
 use bytemuck::cast_slice;
 
 use crate::gpu_data::{GpuDataBindGroup, GpuPalette, GpuQuad, GpuQuads};
-use crate::phase_item::QuadsPhaseItem;
 use crate::{BatchedQuads, DRect};
 
 use self::pipeline::{VpullPipeline, QUADS_SHADER_HANDLE};
 use self::render_command::DrawQuadsVertexPulling;
 use self::render_graph::{VpullPassNode, VPULL_PASS};
+use crate::phase_item::VpullPhaseItem;
 
 pub struct VpullPlugin;
 
@@ -37,14 +41,16 @@ impl Plugin for VpullPlugin {
         let render_app = app.sub_app_mut(RenderApp);
 
         render_app
-            .init_resource::<DrawFunctions<QuadsPhaseItem>>()
-            .add_render_command::<QuadsPhaseItem, DrawQuadsVertexPulling>()
+            .init_resource::<TextureCache>()
+            .init_resource::<DrawFunctions<VpullPhaseItem>>()
+            .add_render_command::<VpullPhaseItem, DrawQuadsVertexPulling>()
             .init_resource::<VpullPipeline>()
             .init_resource::<GpuQuads>()
             .init_resource::<Palette>()
             .init_resource::<GpuPalette>()
             .add_system_to_stage(RenderStage::Extract, extract_quads_phase)
             .add_system_to_stage(RenderStage::Extract, extract_quads)
+            .add_system_to_stage(RenderStage::Prepare, prepare_depth_texture)
             .add_system_to_stage(RenderStage::Prepare, prepare_quads)
             .add_system_to_stage(RenderStage::Queue, queue_quads);
 
@@ -105,7 +111,7 @@ fn extract_quads_phase(mut commands: Commands, active_2d: Res<ActiveCamera<Camer
     if let Some(entity) = active_2d.get() {
         commands
             .get_or_spawn(entity)
-            .insert(RenderPhase::<QuadsPhaseItem>::default());
+            .insert(RenderPhase::<VpullPhaseItem>::default());
     }
 }
 
@@ -212,11 +218,52 @@ fn prepare_quads(
     }
 }
 
+pub fn prepare_depth_texture(
+    mut commands: Commands,
+    mut texture_cache: ResMut<TextureCache>,
+    render_device: Res<RenderDevice>,
+    views_2d: Query<
+        (Entity, &ExtractedCamera), With<RenderPhase<VpullPhaseItem>>,
+    >
+) {
+    let mut textures = HashMap::default();
+    for (entity, camera) in views_2d.iter() {
+        if let Some(physical_target_size) = camera.physical_size {
+            let cached_texture = textures
+                .entry(camera.target.clone())
+                .or_insert_with(|| {
+                    texture_cache.get(
+                        &render_device,
+                        TextureDescriptor {
+                            label: Some("view_depth_texture"),
+                            size: Extent3d {
+                                depth_or_array_layers: 1,
+                                width: physical_target_size.x,
+                                height: physical_target_size.y,
+                            },
+                            mip_level_count: 1,
+                            sample_count: 4,
+                            dimension: TextureDimension::D2,
+                            format: TextureFormat::Depth32Float, /* PERF: vulkan docs recommend using 24
+                                                                  * bit depth for better performance */
+                            usage: TextureUsages::RENDER_ATTACHMENT,
+                        },
+                    )
+                })
+                .clone();
+            commands.entity(entity).insert(ViewDepthTexture {
+                texture: cached_texture.texture,
+                view: cached_texture.default_view,
+            });
+        }
+    }
+}
+
 // QUEUE:
 // This "queues" render jobs that feed off of "prepared" data.
 fn queue_quads(
-    opaque_2d_draw_functions: Res<DrawFunctions<QuadsPhaseItem>>,
-    mut views: Query<&mut RenderPhase<QuadsPhaseItem>>,
+    opaque_2d_draw_functions: Res<DrawFunctions<VpullPhaseItem>>,
+    mut views: Query<&mut RenderPhase<VpullPhaseItem>>,
     quads_query: Query<Entity, With<ExtractedQuads>>,
 ) {
     let draw_quads = opaque_2d_draw_functions
@@ -226,7 +273,7 @@ fn queue_quads(
 
     for mut opaque_phase in views.iter_mut() {
         for entity in quads_query.iter() {
-            opaque_phase.add(QuadsPhaseItem {
+            opaque_phase.add(VpullPhaseItem {
                 entity,
                 draw_function: draw_quads,
             });
