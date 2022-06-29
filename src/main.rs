@@ -99,6 +99,7 @@ fn setup(mut commands: Commands) {
     commands.spawn_bundle((batched_rects,));
 }
 
+#[allow(dead_code)]
 fn overlapping_rects(n: u32) -> Vec<DRect> {
     let scale = 10.0;
     let translate = 10.0;
@@ -121,6 +122,7 @@ fn overlapping_rects(n: u32) -> Vec<DRect> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn many_random_rects(n: usize) -> Vec<DRect> {
     let mut result = Vec::with_capacity(n);
 
@@ -138,6 +140,7 @@ fn many_random_rects(n: usize) -> Vec<DRect> {
     result
 }
 
+#[allow(dead_code)]
 fn many_small_random_rects(n: usize) -> Vec<DRect> {
     let mut result = Vec::with_capacity(n);
 

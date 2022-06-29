@@ -6,9 +6,8 @@ use bevy::{
         render_resource::{
             std140::AsStd140, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry,
             BindingType, BlendState, BufferBindingType, BufferSize, CachedRenderPipelineId,
-            ColorTargetState, ColorWrites, CompareFunction, DepthBiasState, DepthStencilState,
-            Face, FragmentState, FrontFace, MultisampleState, PipelineCache, PolygonMode,
-            PrimitiveState, RenderPipelineDescriptor, ShaderStages, StencilFaceState, StencilState,
+            ColorTargetState, ColorWrites, Face, FragmentState, FrontFace, MultisampleState,
+            PipelineCache, PolygonMode, PrimitiveState, RenderPipelineDescriptor, ShaderStages,
             TextureFormat, VertexState,
         },
         renderer::RenderDevice,

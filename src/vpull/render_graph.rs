@@ -4,9 +4,9 @@ use bevy::render::render_graph::{
 };
 use bevy::render::render_phase::{DrawFunctions, RenderPhase, TrackedRenderPass};
 use bevy::render::render_resource::{
-    LoadOp, Operations, RenderPassDepthStencilAttachment, RenderPassDescriptor,
+    LoadOp, Operations, RenderPassDescriptor,
 };
-use bevy::render::view::{ExtractedView, ViewDepthTexture, ViewTarget};
+use bevy::render::view::{ExtractedView, ViewTarget};
 use bevy::render::{render_graph, renderer::RenderContext};
 
 use crate::phase_item::QuadsPhaseItem;
