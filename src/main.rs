@@ -94,9 +94,31 @@ fn setup(mut commands: Commands) {
         .insert(PanCam::default());
 
     let mut batched_rects = BatchedQuads::default();
-    let rects = overlapping_rects(5);
+    let rects = ordered_rects(false);
     batched_rects.data = rects;
     commands.spawn_bundle((batched_rects,));
+}
+
+#[allow(dead_code)]
+fn ordered_rects(reverse: bool) -> Vec<DRect> {
+    let mut rects = vec![
+        DRect {
+            p0: Point { x: 0.0, y: 0.0 },
+            p1: Point { x: 100.0, y: 100.0 },
+            stroke_width: 1.0,
+            color: 0,
+        },
+        DRect {
+            p0: Point { x: 50.0, y: 50.0 },
+            p1: Point { x: 150.0, y: 150.0 },
+            stroke_width: 1.0,
+            color: 2,
+        },
+    ];
+    if reverse {
+        rects.reverse();
+    }
+    rects
 }
 
 #[allow(dead_code)]
